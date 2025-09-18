@@ -10,6 +10,18 @@ public class AuditLogData {
     @JsonProperty("performer_id")
     private String performerId;
 
+    @JsonProperty("first_name")
+    private String firstName;
+
+    @JsonProperty("last_name")
+    private String lastName;
+
+    @JsonProperty("work_email")
+    private String workEmail;
+
+    @JsonProperty("phone_number")
+    private String phoneNumber;
+
     @JsonProperty("ipaddress")
     private String ipAddress;
 

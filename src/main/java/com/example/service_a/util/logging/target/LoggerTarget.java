@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// Comment: Manages observers for string-based log levels
+// Manages observers of log levels
 @Component
 public class LoggerTarget {
     private final Map<String, List<ILogObserver>> logObservers = new ConcurrentHashMap<>();

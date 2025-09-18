@@ -17,49 +17,56 @@ public class KafkaLogger implements ILogObserver {
     private final KafkaTemplate<String, AuditLogDto> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AuditLogUtil auditLogUtil;
-    private final ThreadLocal<List<AuditLogData>> pendingLogs = ThreadLocal.withInitial(ArrayList::new);
+    private final ThreadLocal<List<AuditLogDto>> pendingLogs = ThreadLocal.withInitial(ArrayList::new);
     private static final String AUDIT_TOPIC = "audit-log-topic";
 
     @Override
     public void log(String message) throws Exception {
-        AuditLogData logData = objectMapper.readValue(message, AuditLogData.class);
+        AuditLogDto logDto = objectMapper.readValue(message, AuditLogDto.class);
 
         // Validate fields
         Map<String, String> errors = new HashMap<>();
-        if (!auditLogUtil.getValidLogLevels().contains(logData.getLogLevel())) {
-            errors.put("logLevel", "Invalid log level: " + logData.getLogLevel());
+        if (!auditLogUtil.getValidLogLevels().contains(logDto.getLogLevel())) {
+            errors.put("logLevel", "Invalid log level: " + logDto.getLogLevel());
         }
-        if (!auditLogUtil.getValidArchiveStrategies().contains(logData.getArchiveStrategy())) {
-            errors.put("archiveStrategy", "Invalid archive strategy: " + logData.getArchiveStrategy());
+        if (!auditLogUtil.getValidArchiveStrategies().contains(logDto.getArchiveStrategy())) {
+            errors.put("archiveStrategy", "Invalid archive strategy: " + logDto.getArchiveStrategy());
         }
-        if (!auditLogUtil.getValidMetadataTypes().contains(logData.getMetadataType())) {
-            errors.put("metadataType", "Invalid metadata type: " + logData.getMetadataType());
+        if (logDto.getMetadata() != null) {
+            for (MetadataDto metadata : logDto.getMetadata()) {
+                if (!auditLogUtil.getValidMetadataTypes().contains(metadata.getMetadataType())) {
+                    errors.put("metadataType", "Invalid metadata type: " + metadata.getMetadataType());
+                }
+            }
         }
         if (!errors.isEmpty()) {
             throw new IllegalArgumentException("Validation failed: " + errors);
         }
 
         // Store log in ThreadLocal
-        pendingLogs.get().add(logData);
+        pendingLogs.get().add(logDto);
 
         // Send immediately for non-ERROR logs or single ERROR log
-        if (!logData.getLogLevel().equals("ERROR") || pendingLogs.get().size() == 1) {
+        if (!logDto.getLogLevel().equals("ERROR") || pendingLogs.get().size() == 1) {
             sendAuditLog(pendingLogs.get());
             pendingLogs.get().clear();
-        } else if (logData.getLogLevel().equals("ERROR") && pendingLogs.get().size() == 2) {
+        } else if (logDto.getLogLevel().equals("ERROR") && pendingLogs.get().size() == 2) {
             sendAuditLog(pendingLogs.get());
             pendingLogs.get().clear();
         }
     }
 
-    private void sendAuditLog(List<AuditLogData> logDataList) {
-        AuditLogData firstLog = logDataList.get(0);
+    private void sendAuditLog(List<AuditLogDto> logDtoList) {
+        AuditLogDto firstLog = logDtoList.get(0);
         List<MetadataDto> metadata = new ArrayList<>();
-        for (AuditLogData logData : logDataList) {
-            metadata.add(MetadataDto.builder()
-                    .content(logData.getContent())
-                    .metadataType(logData.getMetadataType())
-                    .build());
+        List<ActionDto> actions = new ArrayList<>();
+        for (AuditLogDto logDto : logDtoList) {
+            if (logDto.getMetadata() != null) {
+                metadata.addAll(logDto.getMetadata());
+            }
+            if (logDto.getAction() != null) {
+                actions.addAll(logDto.getAction());
+            }
         }
 
         AuditLogDto auditLogDto = AuditLogDto.builder()
@@ -67,19 +74,14 @@ public class KafkaLogger implements ILogObserver {
                 .serviceName(firstLog.getServiceName())
                 .tokenId(firstLog.getTokenId())
                 .timeToArchiveInDays(auditLogUtil.getTimeToArchive(firstLog.getArchiveStrategy(), firstLog.getLogLevel()))
-                .performerId(UserIdGenerator.generateId())
+                .performer(firstLog.getPerformer())
                 .logLevel(firstLog.getLogLevel())
                 .archiveStrategy(firstLog.getArchiveStrategy())
-                .action(List.of(
-                        ActionDto.builder()
-                                .name(firstLog.getActionName())
-                                .description(firstLog.getDescription())
-                                .build()
-                ))
+                .action(actions)
                 .metadata(metadata)
                 .build();
 
-        kafkaTemplate.send(AUDIT_TOPIC, auditLogDto.getPerformerId(), auditLogDto)
+        kafkaTemplate.send(AUDIT_TOPIC, auditLogDto.getPerformer().getPerformerId(), auditLogDto)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         throw new RuntimeException("Failed to send audit log to Kafka: " + ex.getMessage(), ex);

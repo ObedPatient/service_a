@@ -1,6 +1,9 @@
 package com.example.service_a.util.aop;
 
-import com.example.service_a.dto.AuditLogData;
+import com.example.service_a.dto.AuditLogDto;
+import com.example.service_a.dto.ActionDto;
+import com.example.service_a.dto.MetadataDto;
+import com.example.service_a.dto.UserFlatDto;
 import com.example.service_a.util.AuditLogUtil;
 import com.example.service_a.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +16,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 @Aspect
 @Component
@@ -37,7 +41,7 @@ public class AuditLogAspect {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String ipAddress = getClientIp();
-        String tokenId = request.getHeader("X-Auth-Token") != null ? request.getHeader("X-Auth-Token") : "unknown";
+        String tokenId = "unknown";
         String logLevel = auditLogUtil.determineLogLevel(methodName);
         String archiveStrategy = auditLogUtil.determineArchiveStrategy(methodName);
         String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
@@ -45,20 +49,38 @@ public class AuditLogAspect {
         String metadataType = auditLogUtil.determineMetadataType(result, methodName);
         String content = generateContent(result, metadataType);
 
-        AuditLogData auditLogData = AuditLogData.builder()
+        // Placeholder for user details; in a real system, fetch from authentication context
+        UserFlatDto performer = UserFlatDto.builder()
+                .performerId("unknown") // Replace with actual logic, e.g., from SecurityContext
+                .firstName("Unknown") // Replace with actual logic
+                .lastName("Unknown") // Replace with actual logic
+                .workEmail("unknown@example.com") // Replace with actual logic
+                .phoneNumber("unknown") // Replace with actual logic
+                .build();
+
+        AuditLogDto auditLogDto = AuditLogDto.builder()
                 .ipAddress(ipAddress)
                 .serviceName(serviceName)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
                 .timeToArchiveInDays(timeToArchive)
-                .actionName(methodName)
-                .description(description)
-                .content(content)
-                .metadataType(metadataType)
+                .performer(performer)
+                .action(List.of(
+                        ActionDto.builder()
+                                .name(methodName)
+                                .description(description)
+                                .build()
+                ))
+                .metadata(List.of(
+                        MetadataDto.builder()
+                                .content(content)
+                                .metadataType(metadataType)
+                                .build()
+                ))
                 .build();
 
-        String message = objectMapper.writeValueAsString(auditLogData);
+        String message = objectMapper.writeValueAsString(auditLogDto);
         logger.log(logLevel, message);
     }
 
@@ -68,7 +90,7 @@ public class AuditLogAspect {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String ipAddress = getClientIp();
-        String tokenId = request.getHeader("X-Auth-Token") != null ? request.getHeader("X-Auth-Token") : "unknown";
+        String tokenId = "unknown";
         String logLevel = "ERROR";
         String archiveStrategy = "ARCHIVE";
         String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
@@ -76,21 +98,38 @@ public class AuditLogAspect {
         String metadataType = auditLogUtil.determineMetadataType(ex, methodName);
         String content = generateContent(ex, metadataType);
 
-        String actionName = methodName;
-        AuditLogData auditLogData = AuditLogData.builder()
+        // Placeholder for user details; in a real system, fetch from authentication context
+        UserFlatDto performer = UserFlatDto.builder()
+                .performerId("unknown")
+                .firstName("Unknown")
+                .lastName("Unknown")
+                .workEmail("unknown@example.com")
+                .phoneNumber("unknown")
+                .build();
+
+        AuditLogDto auditLogDto = AuditLogDto.builder()
                 .ipAddress(ipAddress)
                 .serviceName(serviceName)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
                 .timeToArchiveInDays(timeToArchive)
-                .actionName(actionName)
-                .description(description)
-                .content(content)
-                .metadataType(metadataType)
+                .performer(performer)
+                .action(List.of(
+                        ActionDto.builder()
+                                .name(methodName)
+                                .description(description)
+                                .build()
+                ))
+                .metadata(List.of(
+                        MetadataDto.builder()
+                                .content(content)
+                                .metadataType(metadataType)
+                                .build()
+                ))
                 .build();
 
-        String message = objectMapper.writeValueAsString(auditLogData);
+        String message = objectMapper.writeValueAsString(auditLogDto);
         logger.log(logLevel, message);
     }
 

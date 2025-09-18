@@ -1,6 +1,6 @@
 package com.example.service_a.util.logging.chain;
 
-// Comment: Handles ERROR level logs
+// Handles ERROR level logs
 
 import com.example.service_a.util.logging.target.LoggerTarget;
 

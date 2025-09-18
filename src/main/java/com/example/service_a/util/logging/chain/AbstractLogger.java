@@ -5,7 +5,7 @@ import lombok.Data;
 
 
 /*
- * Abstract class using string-based log levels for Chain of Responsibility
+ * Abstract class using log levels for Chain of Responsibility
  */
 @Data
 public abstract class AbstractLogger {
