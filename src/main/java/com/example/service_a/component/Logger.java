@@ -1,8 +1,6 @@
-package com.example.service_a.util.logging;
+package com.example.service_a.component;
 
 import com.example.service_a.util.logging.chain.AbstractLogger;
-import com.example.service_a.util.logging.manager.LogManager;
-import com.example.service_a.util.logging.target.LoggerTarget;
 import org.springframework.stereotype.Component;
 
 @Component

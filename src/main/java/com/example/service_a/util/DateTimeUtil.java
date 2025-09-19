@@ -1,6 +1,9 @@
 /**
  * Utility class for generating timestamps in the e-procurement system.
  * Provides methods to obtain formatted timestamps for use in ID generation.
+ * @author Obed Patient
+ * @version 1.0
+ * @since 1.0
  */
 package com.example.service_a.util;
 

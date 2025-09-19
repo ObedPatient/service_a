@@ -1,8 +1,14 @@
+/**
+ * Logs audit information to a Kafka topic.
+ *
+ * @author Obed Patient
+ * @version 1.0
+ * @since 1.0
+ */
 package com.example.service_a.producer;
 
 import com.example.service_a.dto.*;
-import com.example.service_a.util.AuditLogUtil;
-import com.example.service_a.util.UserIdGenerator;
+import com.example.service_a.component.AuditLogUtil;
 import com.example.service_a.util.logging.observer.ILogObserver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +27,12 @@ public class KafkaLogger implements ILogObserver {
     private final ThreadLocal<List<AuditLogDto>> pendingLogs = ThreadLocal.withInitial(ArrayList::new);
     private static final String AUDIT_TOPIC = "audit-log-topic";
 
+    /**
+     * Logs audit information by validating and storing it, then sending to Kafka.
+     *
+     * @param message the audit log message in JSON format
+     * @throws Exception if validation fails or an error occurs during processing
+     */
     @Override
     public void log(String message) throws Exception {
         AuditLogDto logDto = objectMapper.readValue(message, AuditLogDto.class);
@@ -56,6 +69,11 @@ public class KafkaLogger implements ILogObserver {
         }
     }
 
+    /**
+     * Sends a list of audit logs to the Kafka topic, combining metadata and actions.
+     *
+     * @param logDtoList the list of audit logs to send
+     */
     private void sendAuditLog(List<AuditLogDto> logDtoList) {
         AuditLogDto firstLog = logDtoList.get(0);
         List<MetadataDto> metadata = new ArrayList<>();

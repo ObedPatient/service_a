@@ -3,7 +3,7 @@ package com.example.service_a.service;
 import com.example.service_a.model.UserModel;
 import com.example.service_a.repository.UserRepository;
 import com.example.service_a.util.UserIdGenerator;
-import com.example.service_a.util.logging.Logger;
+import com.example.service_a.component.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

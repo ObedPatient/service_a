@@ -1,3 +1,10 @@
+
+/**
+ * Configuration class for setting up Kafka producer beans.
+ * @author Obed Patient
+ * @version 1.0
+ * @since 1.0
+ */
 package com.example.service_a.config;
 
 import com.example.service_a.dto.AuditLogDto;
@@ -16,6 +23,11 @@ import java.util.Map;
 @Configuration
 public class ProducerConfiguration {
 
+    /**
+     * Creates a Kafka ProducerFactory for producing AuditLogDto messages.
+     *
+     * @return a configured ProducerFactory
+     */
     @Bean
     public ProducerFactory<String, AuditLogDto> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -27,6 +39,11 @@ public class ProducerConfiguration {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
+    /**
+     * Creates a KafkaTemplate for sending AuditLogDto messages to Kafka.
+     *
+     * @return a configured KafkaTemplate
+     */
     @Bean
     public KafkaTemplate<String, AuditLogDto> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());

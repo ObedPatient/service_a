@@ -1,8 +1,13 @@
-package com.example.service_a.util.logging.manager;
+/**
+ * Manages logging operations by setting up a chain of loggers and adding observers for different log levels.
+ * @author Obed Patient
+ * @version 1.0
+ * @since 1.0
+ */
+package com.example.service_a.component;
 
 import com.example.service_a.util.logging.chain.*;
 import com.example.service_a.producer.KafkaLogger;
-import com.example.service_a.util.logging.target.LoggerTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -12,16 +17,28 @@ public class LogManager {
     private final LoggerTarget loggerTarget;
     private static KafkaLogger kafkaLogger;
 
+    /**
+     * Constructs a LogManager with the specified LoggerTarget.
+     * @param loggerTarget the target for logging operations
+     */
     @Autowired
     public LogManager(LoggerTarget loggerTarget) {
         this.loggerTarget = loggerTarget;
     }
 
+    /**
+     * Sets the KafkaLogger instance for logging.
+     * @param kafkaLogger the KafkaLogger to be set
+     */
     @Autowired
     public void setKafkaLogger(@Lazy KafkaLogger kafkaLogger) {
         LogManager.kafkaLogger = kafkaLogger;
     }
 
+    /**
+     * Creates a chain of loggers for different log levels.
+     * @return the head of the logger chain
+     */
     public AbstractLogger doChaining() {
         AbstractLogger errorLogger = new ErrorLogger("ERROR");
         AbstractLogger warningLogger = new WarningLogger("WARNING");
@@ -35,6 +52,10 @@ public class LogManager {
         return errorLogger;
     }
 
+    /**
+     * Adds observers for different log levels to the LoggerTarget.
+     * @return the LoggerTarget with added observers
+     */
     public LoggerTarget addObservers() {
         loggerTarget.addObserver("INFO", kafkaLogger);
         loggerTarget.addObserver("ERROR", kafkaLogger);

@@ -1,11 +1,18 @@
-package com.example.service_a.util.aop;
+/**
+ * Aspect for logging audit information for service method executions and exceptions.
+ * @author  - Obed Patient
+ * @version - 1.0
+ * @since   - 1.0
+ */
+package com.example.service_a.component.aop;
 
 import com.example.service_a.dto.AuditLogDto;
 import com.example.service_a.dto.ActionDto;
 import com.example.service_a.dto.MetadataDto;
 import com.example.service_a.dto.UserFlatDto;
-import com.example.service_a.util.AuditLogUtil;
-import com.example.service_a.util.logging.Logger;
+import com.example.service_a.component.AuditLogUtil;
+import com.example.service_a.util.UserIdGenerator;
+import com.example.service_a.component.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -22,6 +29,7 @@ import java.util.List;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -35,6 +43,13 @@ public class AuditLogAspect {
     @Value("${app.service-name}")
     private String serviceName;
 
+    /**
+     * Logs audit information after a service method executes successfully.
+     *
+     * @param joinPoint the join point of the method execution
+     * @param result the result returned by the method
+     * @throws Exception if an error occurs during logging
+     */
     @AfterReturning(pointcut = "execution(* com.example.service_a.service..*.*(..))",
             returning = "result")
     public void logMethodExecution(JoinPoint joinPoint, Object result) throws Exception {
@@ -49,56 +64,7 @@ public class AuditLogAspect {
         String metadataType = auditLogUtil.determineMetadataType(result, methodName);
         String content = generateContent(result, metadataType);
 
-        // Placeholder for user details; in a real system, fetch from authentication context
-        UserFlatDto performer = UserFlatDto.builder()
-                .performerId("unknown") // Replace with actual logic, e.g., from SecurityContext
-                .firstName("Unknown") // Replace with actual logic
-                .lastName("Unknown") // Replace with actual logic
-                .workEmail("unknown@example.com") // Replace with actual logic
-                .phoneNumber("unknown") // Replace with actual logic
-                .build();
-
-        AuditLogDto auditLogDto = AuditLogDto.builder()
-                .ipAddress(ipAddress)
-                .serviceName(serviceName)
-                .tokenId(tokenId)
-                .logLevel(logLevel)
-                .archiveStrategy(archiveStrategy)
-                .timeToArchiveInDays(timeToArchive)
-                .performer(performer)
-                .action(List.of(
-                        ActionDto.builder()
-                                .name(methodName)
-                                .description(description)
-                                .build()
-                ))
-                .metadata(List.of(
-                        MetadataDto.builder()
-                                .content(content)
-                                .metadataType(metadataType)
-                                .build()
-                ))
-                .build();
-
-        String message = objectMapper.writeValueAsString(auditLogDto);
-        logger.log(logLevel, message);
-    }
-
-    @AfterThrowing(pointcut = "execution(* com.example.service_a.service..*.*(..))",
-            throwing = "ex")
-    public void logException(JoinPoint joinPoint, Throwable ex) throws Exception {
-        String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getSignature().getDeclaringTypeName();
-        String ipAddress = getClientIp();
-        String tokenId = "unknown";
-        String logLevel = "ERROR";
-        String archiveStrategy = "ARCHIVE";
-        String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
-        String description = "Exception in " + methodName + " in " + className;
-        String metadataType = auditLogUtil.determineMetadataType(ex, methodName);
-        String content = generateContent(ex, metadataType);
-
-        // Placeholder for user details; in a real system, fetch from authentication context
+        // Placeholder for user details;
         UserFlatDto performer = UserFlatDto.builder()
                 .performerId("unknown")
                 .firstName("Unknown")
@@ -133,6 +99,68 @@ public class AuditLogAspect {
         logger.log(logLevel, message);
     }
 
+    /**
+     * Logs audit information when a service method throws an exception.
+     *
+     * @param joinPoint the join point of the method execution
+     * @param ex the exception thrown by the method
+     * @throws Exception if an error occurs during logging
+     */
+    @AfterThrowing(pointcut = "execution(* com.example.service_a.service..*.*(..))",
+            throwing = "ex")
+    public void logException(JoinPoint joinPoint, Throwable ex) throws Exception {
+        String methodName = joinPoint.getSignature().getName();
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        String ipAddress = getClientIp();
+        String tokenId = "unknown";
+        String logLevel = "ERROR";
+        String archiveStrategy = "ARCHIVE";
+        String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
+        String description = "Exception in " + methodName + " in " + className;
+        String metadataType = auditLogUtil.determineMetadataType(ex, methodName);
+        String content = generateContent(ex, metadataType);
+
+        // Placeholder for user details; in a real system, fetch from authentication context
+        UserFlatDto performer = UserFlatDto.builder()
+                .performerId(UserIdGenerator.generateId())
+                .firstName("David")
+                .lastName("semana")
+                .workEmail("semana@gmail.com.com")
+                .phoneNumber("0789278490")
+                .build();
+
+        AuditLogDto auditLogDto = AuditLogDto.builder()
+                .ipAddress(ipAddress)
+                .serviceName(serviceName)
+                .tokenId(tokenId)
+                .logLevel(logLevel)
+                .archiveStrategy(archiveStrategy)
+                .timeToArchiveInDays(timeToArchive)
+                .performer(performer)
+                .action(List.of(
+                        ActionDto.builder()
+                                .name(methodName)
+                                .description(description)
+                                .build()
+                ))
+                .metadata(List.of(
+                        MetadataDto.builder()
+                                .content(content)
+                                .metadataType(metadataType)
+                                .build()
+                ))
+                .build();
+
+        String message = objectMapper.writeValueAsString(auditLogDto);
+        logger.log(logLevel, message);
+    }
+
+    /**
+     * Retrieves the client IP address from the HTTP request.
+     *
+     * @return the client IP address
+     * @throws UnknownHostException if the IP address cannot be resolved
+     */
     private String getClientIp() throws UnknownHostException {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
@@ -144,6 +172,14 @@ public class AuditLogAspect {
         return ip;
     }
 
+    /**
+     * Generates content for audit log based on result and metadata type.
+     *
+     * @param result the result of the method execution
+     * @param metadataType the type of metadata
+     * @return the generated content as a string
+     * @throws Exception if an error occurs during content generation
+     */
     private String generateContent(Object result, String metadataType) throws Exception {
         if ("OBJECT".equals(metadataType)) {
             return objectMapper.writeValueAsString(result);
@@ -152,6 +188,13 @@ public class AuditLogAspect {
         }
     }
 
+    /**
+     * Generates content for audit log based on exception and metadata type.
+     *
+     * @param ex the exception thrown
+     * @param metadataType the type of metadata
+     * @return the generated content as a string
+     */
     private String generateContent(Throwable ex, String metadataType) {
         if ("STACKTRACE".equals(metadataType)) {
             StringWriter sw = new StringWriter();
