@@ -1,5 +1,5 @@
 /**
- * Aspect for logging audit information for service method executions and exceptions.
+ * Aspect for logging audit information for UserService method executions and exceptions.
  * @author  - Obed Patient
  * @version - 1.0
  * @since   - 1.0
@@ -13,6 +13,7 @@ import com.example.service_a.dto.UserFlatDto;
 import com.example.service_a.component.AuditLogUtil;
 import com.example.service_a.util.UserIdGenerator;
 import com.example.service_a.component.Logger;
+import com.example.service_a.model.UserModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -44,14 +44,13 @@ public class AuditLogAspect {
     private String serviceName;
 
     /**
-     * Logs audit information after a service method executes successfully.
+     * Logs audit information after a UserService method executes successfully.
      *
      * @param joinPoint the join point of the method execution
      * @param result the result returned by the method
      * @throws Exception if an error occurs during logging
      */
-    @AfterReturning(pointcut = "execution(* com.example.service_a.service..*.*(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* com.example.service_a.service.UserService.*(..))", returning = "result")
     public void logMethodExecution(JoinPoint joinPoint, Object result) throws Exception {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
@@ -60,18 +59,28 @@ public class AuditLogAspect {
         String logLevel = auditLogUtil.determineLogLevel(methodName);
         String archiveStrategy = auditLogUtil.determineArchiveStrategy(methodName);
         String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
-        String description = "Execution of " + methodName + " in " + className;
+        String description = (result instanceof UserModel ? "User operation" : "Operation") + " in " + methodName + " in " + className;
         String metadataType = auditLogUtil.determineMetadataType(result, methodName);
         String content = generateContent(result, metadataType);
 
-        // Placeholder for user details;
-        UserFlatDto performer = UserFlatDto.builder()
-                .performerId("unknown")
-                .firstName("Unknown")
-                .lastName("Unknown")
-                .workEmail("unknown@example.com")
-                .phoneNumber("unknown")
-                .build();
+        UserFlatDto performer;
+        if (result instanceof UserModel userModel) {
+            performer = UserFlatDto.builder()
+                    .performerId(userModel.getPerformerId())
+                    .firstName(userModel.getFirstName())
+                    .lastName(userModel.getLastName())
+                    .workEmail(userModel.getWorkEmail())
+                    .phoneNumber(userModel.getPhoneNumber())
+                    .build();
+        } else {
+            performer = UserFlatDto.builder()
+                    .performerId("unknown")
+                    .firstName("Unknown")
+                    .lastName("Unknown")
+                    .workEmail("unknown@gmail.com")
+                    .phoneNumber("unknown")
+                    .build();
+        }
 
         AuditLogDto auditLogDto = AuditLogDto.builder()
                 .ipAddress(ipAddress)
@@ -100,14 +109,13 @@ public class AuditLogAspect {
     }
 
     /**
-     * Logs audit information when a service method throws an exception.
+     * Logs audit information when a UserService method throws an exception.
      *
      * @param joinPoint the join point of the method execution
      * @param ex the exception thrown by the method
      * @throws Exception if an error occurs during logging
      */
-    @AfterThrowing(pointcut = "execution(* com.example.service_a.service..*.*(..))",
-            throwing = "ex")
+    @AfterThrowing(pointcut = "execution(* com.example.service_a.service.UserService.*(..))", throwing = "ex")
     public void logException(JoinPoint joinPoint, Throwable ex) throws Exception {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
@@ -120,12 +128,11 @@ public class AuditLogAspect {
         String metadataType = auditLogUtil.determineMetadataType(ex, methodName);
         String content = generateContent(ex, metadataType);
 
-        // Placeholder for user details; in a real system, fetch from authentication context
         UserFlatDto performer = UserFlatDto.builder()
                 .performerId(UserIdGenerator.generateId())
                 .firstName("David")
-                .lastName("semana")
-                .workEmail("semana@gmail.com.com")
+                .lastName("Semana")
+                .workEmail("semana@gmail.com")
                 .phoneNumber("0789278490")
                 .build();
 

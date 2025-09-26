@@ -17,20 +17,22 @@ public class UserService {
     private final Logger logger;
 
     public UserModel createUser(UserModel userModel) {
-        if (userRepository.existsByUsernameOrEmail(userModel.getUsername(), userModel.getEmail())) {
-            throw new RuntimeException("Username or email already exists");
+        if (userRepository.existsByWorkEmail(userModel.getWorkEmail())) {
+            throw new RuntimeException("Email already exists");
         }
         UserModel newUser = UserModel.builder()
-                .id(UserIdGenerator.generateId())
-                .username(userModel.getUsername())
-                .email(userModel.getEmail())
+                .performerId(UserIdGenerator.generateId())
+                .firstName(userModel.getFirstName())
+                .lastName(userModel.getLastName())
+                .workEmail(userModel.getWorkEmail())
+                .phoneNumber(userModel.getPhoneNumber())
                 .createdAt(LocalDateTime.now())
                 .build();
         return userRepository.save(newUser);
     }
 
-    public UserModel getUser(String id) {
-        return userRepository.findById(id)
+    public UserModel getUser(String performerId) {
+        return userRepository.findByPerformerId(performerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -38,23 +40,24 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public UserModel updateUser(String id, UserModel userModel) {
-        UserModel existingUser = userRepository.findById(id)
+    public UserModel updateUser(String performerId, UserModel userModel) {
+        UserModel existingUser = userRepository.findByPerformerId(performerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if (userRepository.existsByUsernameOrEmail(userModel.getUsername(), userModel.getEmail()) &&
-                !existingUser.getUsername().equals(userModel.getUsername()) &&
-                !existingUser.getEmail().equals(userModel.getEmail())) {
-            throw new RuntimeException("Username or email already exists");
+        if (userRepository.existsByWorkEmail(userModel.getWorkEmail()) &&
+                !existingUser.getWorkEmail().equals(userModel.getWorkEmail())) {
+            throw new RuntimeException("Email already exists");
         }
-        existingUser.setUsername(userModel.getUsername());
-        existingUser.setEmail(userModel.getEmail());
+        existingUser.setFirstName(userModel.getFirstName());
+        existingUser.setLastName(userModel.getLastName());
+        existingUser.setWorkEmail(userModel.getWorkEmail());
+        existingUser.setPhoneNumber(userModel.getPhoneNumber());
         return userRepository.save(existingUser);
     }
 
-    public void deleteUser(String id) {
-        if (!userRepository.existsById(id)) {
+    public void deleteUser(String performerId) {
+        if (!userRepository.existsByPerformerId(performerId)) {
             throw new RuntimeException("User not found");
         }
-        userRepository.deleteById(id);
+        userRepository.deleteByPerformerId(performerId);
     }
 }

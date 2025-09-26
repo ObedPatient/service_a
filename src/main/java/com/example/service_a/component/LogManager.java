@@ -21,7 +21,7 @@ public class LogManager {
      * Constructs a LogManager with the specified LoggerTarget.
      * @param loggerTarget the target for logging operations
      */
-    @Autowired
+
     public LogManager(LoggerTarget loggerTarget) {
         this.loggerTarget = loggerTarget;
     }
@@ -30,7 +30,7 @@ public class LogManager {
      * Sets the KafkaLogger instance for logging.
      * @param kafkaLogger the KafkaLogger to be set
      */
-    @Autowired
+
     public void setKafkaLogger(@Lazy KafkaLogger kafkaLogger) {
         LogManager.kafkaLogger = kafkaLogger;
     }

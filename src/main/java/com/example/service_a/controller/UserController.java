@@ -1,6 +1,6 @@
 package com.example.service_a.controller;
 
-import com.example.service_a.dto.UserDto;
+import com.example.service_a.dto.UserFlatDto;
 import com.example.service_a.model.UserModel;
 import com.example.service_a.service.UserService;
 import jakarta.validation.Valid;
@@ -18,56 +18,58 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
+    public ResponseEntity<UserFlatDto> createUser(@Valid @RequestBody UserFlatDto userDto) {
         UserModel userModel = toModel(userDto);
         UserModel savedModel = userService.createUser(userModel);
         return ResponseEntity.ok(toDto(savedModel));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUser(@Valid @PathVariable String id) {
-        UserModel userModel = userService.getUser(id);
+    @GetMapping("/{performerId}")
+    public ResponseEntity<UserFlatDto> getUser(@Valid @PathVariable String performerId) {
+        UserModel userModel = userService.getUser(performerId);
         return ResponseEntity.ok(toDto(userModel));
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserFlatDto>> getAllUsers() {
         List<UserModel> userModels = userService.getAllUsers();
-        List<UserDto> userDtos = new ArrayList<>();
+        List<UserFlatDto> userDtos = new ArrayList<>();
         for (UserModel userModel : userModels) {
             userDtos.add(toDto(userModel));
         }
         return ResponseEntity.ok(userDtos);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@Valid @PathVariable String id, @RequestBody UserDto userDto) {
+    @PutMapping("/{performerId}")
+    public ResponseEntity<UserFlatDto> updateUser(@Valid @PathVariable String performerId, @RequestBody UserFlatDto userDto) {
         UserModel userModel = toModel(userDto);
-        UserModel updatedModel = userService.updateUser(id, userModel);
+        UserModel updatedModel = userService.updateUser(performerId, userModel);
         return ResponseEntity.ok(toDto(updatedModel));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@Valid @PathVariable String id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/{performerId}")
+    public ResponseEntity<Void> deleteUser(@Valid @PathVariable String performerId) {
+        userService.deleteUser(performerId);
         return ResponseEntity.noContent().build();
     }
 
-    private UserModel toModel(UserDto userDto) {
+    private UserModel toModel(UserFlatDto userDto) {
         return UserModel.builder()
-                .id(userDto.getId())
-                .username(userDto.getUsername())
-                .email(userDto.getEmail())
-                .createdAt(userDto.getCreatedAt())
+                .performerId(userDto.getPerformerId())
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .workEmail(userDto.getWorkEmail())
+                .phoneNumber(userDto.getPhoneNumber())
                 .build();
     }
 
-    private UserDto toDto(UserModel userModel) {
-        return UserDto.builder()
-                .id(userModel.getId())
-                .username(userModel.getUsername())
-                .email(userModel.getEmail())
-                .createdAt(userModel.getCreatedAt())
+    private UserFlatDto toDto(UserModel userModel) {
+        return UserFlatDto.builder()
+                .performerId(userModel.getPerformerId())
+                .firstName(userModel.getFirstName())
+                .lastName(userModel.getLastName())
+                .workEmail(userModel.getWorkEmail())
+                .phoneNumber(userModel.getPhoneNumber())
                 .build();
     }
 }
