@@ -81,11 +81,15 @@ public class AuditLogUtil {
      * @return the determined log level
      */
     public String determineLogLevel(String methodName) {
-        if (methodName.contains("error") || methodName.contains("fail")) {
+        if (methodName == null) {
+            return "INFO";
+        }
+        String lowerCaseMethodName = methodName.toLowerCase();
+        if (lowerCaseMethodName.contains("error") || lowerCaseMethodName.contains("fail")) {
             return "ERROR";
-        } else if (methodName.contains("update") || methodName.contains("modify")) {
+        } else if (lowerCaseMethodName.contains("update") || lowerCaseMethodName.contains("modify")) {
             return "WARNING";
-        } else if (methodName.contains("debug") || methodName.contains("trace")) {
+        } else if (lowerCaseMethodName.contains("get") || lowerCaseMethodName.contains("debug") || lowerCaseMethodName.contains("trace")) {
             return "DEBUG";
         } else {
             return "INFO";
@@ -98,9 +102,13 @@ public class AuditLogUtil {
      * @return the determined archive strategy
      */
     public String determineArchiveStrategy(String methodName) {
-        if (methodName.contains("delete") || methodName.contains("remove")) {
+        if (methodName == null) {
+            return "ARCHIVE";
+        }
+        String lowerCaseMethodName = methodName.toLowerCase();
+        if (lowerCaseMethodName.contains("delete") || lowerCaseMethodName.contains("remove")) {
             return "DELETE";
-        } else if (methodName.contains("debug") || methodName.contains("trace")) {
+        } else if (lowerCaseMethodName.contains("debug") || lowerCaseMethodName.contains("trace")) {
             return "NEVER";
         } else {
             return "ARCHIVE";
@@ -114,9 +122,13 @@ public class AuditLogUtil {
      * @return the determined metadata type
      */
     public String determineMetadataType(Object result, String methodName) {
-        if (methodName.contains("object") || (result != null && !(result instanceof String))) {
+        if (methodName == null) {
+            return "MESSAGE";
+        }
+        String lowerCaseMethodName = methodName.toLowerCase();
+        if (lowerCaseMethodName.contains("object") || (result != null && !(result instanceof String))) {
             return "OBJECT";
-        } else if (methodName.contains("message") || methodName.contains("debug") || methodName.contains("trace")) {
+        } else if (lowerCaseMethodName.contains("message") || lowerCaseMethodName.contains("debug") || lowerCaseMethodName.contains("trace")) {
             return "MESSAGE";
         } else {
             return "MESSAGE";
@@ -130,7 +142,11 @@ public class AuditLogUtil {
      * @return the determined metadata type
      */
     public String determineMetadataType(Throwable ex, String methodName) {
-        if (methodName.contains("error") || methodName.contains("fail")) {
+        if (methodName == null) {
+            return "STACKTRACE";
+        }
+        String lowerCaseMethodName = methodName.toLowerCase();
+        if (lowerCaseMethodName.contains("error") || lowerCaseMethodName.contains("fail")) {
             return "ERROR MESSAGE";
         } else {
             return "STACKTRACE";

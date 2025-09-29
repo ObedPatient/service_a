@@ -8,31 +8,22 @@ package com.example.service_a.component;
 
 import com.example.service_a.util.logging.chain.*;
 import com.example.service_a.producer.KafkaLogger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LogManager {
     private final LoggerTarget loggerTarget;
-    private static KafkaLogger kafkaLogger;
+    private final KafkaLogger kafkaLogger;
 
     /**
-     * Constructs a LogManager with the specified LoggerTarget.
+     * Constructs a LogManager with the specified LoggerTarget and KafkaLogger.
      * @param loggerTarget the target for logging operations
+     * @param kafkaLogger the KafkaLogger for logging
      */
-
-    public LogManager(LoggerTarget loggerTarget) {
+    public LogManager(LoggerTarget loggerTarget, @Lazy KafkaLogger kafkaLogger) {
         this.loggerTarget = loggerTarget;
-    }
-
-    /**
-     * Sets the KafkaLogger instance for logging.
-     * @param kafkaLogger the KafkaLogger to be set
-     */
-
-    public void setKafkaLogger(@Lazy KafkaLogger kafkaLogger) {
-        LogManager.kafkaLogger = kafkaLogger;
+        this.kafkaLogger = kafkaLogger;
     }
 
     /**
@@ -57,10 +48,14 @@ public class LogManager {
      * @return the LoggerTarget with added observers
      */
     public LoggerTarget addObservers() {
-        loggerTarget.addObserver("INFO", kafkaLogger);
-        loggerTarget.addObserver("ERROR", kafkaLogger);
-        loggerTarget.addObserver("WARNING", kafkaLogger);
-        loggerTarget.addObserver("DEBUG", kafkaLogger);
+        if (kafkaLogger != null) {
+            loggerTarget.addObserver("INFO", kafkaLogger);
+            loggerTarget.addObserver("ERROR", kafkaLogger);
+            loggerTarget.addObserver("WARNING", kafkaLogger);
+            loggerTarget.addObserver("DEBUG", kafkaLogger);
+        } else {
+            System.err.println("KafkaLogger is null, no observers added");
+        }
         return loggerTarget;
     }
 }

@@ -20,16 +20,4 @@ public class Logger {
     public void error(String message) throws Exception {
         chain.logMessage("ERROR", message, loggerTarget);
     }
-
-    public void warning(String message) throws Exception {
-        chain.logMessage("WARNING", message, loggerTarget);
-    }
-
-    public void debug(String message) throws Exception {
-        chain.logMessage("DEBUG", message, loggerTarget);
-    }
-
-    public void info(String message) throws Exception {
-        chain.logMessage("INFO", message, loggerTarget);
-    }
 }

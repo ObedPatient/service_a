@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -24,18 +24,24 @@ public class KafkaLogger implements ILogObserver {
     private final KafkaTemplate<String, AuditLogDto> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AuditLogUtil auditLogUtil;
-    private final ThreadLocal<List<AuditLogDto>> pendingLogs = ThreadLocal.withInitial(ArrayList::new);
     private static final String AUDIT_TOPIC = "audit-log-topic";
 
     /**
-     * Logs audit information by validating and storing it, then sending to Kafka.
+     * Logs audit information by validating and sending it to Kafka.
      *
      * @param message the audit log message in JSON format
      * @throws Exception if validation fails or an error occurs during processing
      */
     @Override
     public void log(String message) throws Exception {
-        AuditLogDto logDto = objectMapper.readValue(message, AuditLogDto.class);
+        // Deserialize JSON message to AuditLogDto
+        AuditLogDto logDto;
+        try {
+            logDto = objectMapper.readValue(message, AuditLogDto.class);
+        } catch (Exception e) {
+            System.err.println("Failed to deserialize audit log message: " + e.getMessage());
+            throw new IllegalArgumentException("Invalid JSON format: " + e.getMessage(), e);
+        }
 
         // Validate fields
         Map<String, String> errors = new HashMap<>();
@@ -53,57 +59,33 @@ public class KafkaLogger implements ILogObserver {
             }
         }
         if (!errors.isEmpty()) {
+            System.err.println("Validation failed: " + errors);
             throw new IllegalArgumentException("Validation failed: " + errors);
         }
 
-        // Store log in ThreadLocal
-        pendingLogs.get().add(logDto);
-
-        // Send immediately for non-ERROR logs or single ERROR log
-        if (!logDto.getLogLevel().equals("ERROR") || pendingLogs.get().size() == 1) {
-            sendAuditLog(pendingLogs.get());
-            pendingLogs.get().clear();
-        } else if (logDto.getLogLevel().equals("ERROR") && pendingLogs.get().size() == 2) {
-            sendAuditLog(pendingLogs.get());
-            pendingLogs.get().clear();
-        }
+        // Send log directly to Kafka
+        sendAuditLog(logDto);
     }
 
     /**
-     * Sends a list of audit logs to the Kafka topic, combining metadata and actions.
+     * Sends a single audit log to the Kafka topic.
      *
-     * @param logDtoList the list of audit logs to send
+     * @param logDto the audit log to send
      */
-    private void sendAuditLog(List<AuditLogDto> logDtoList) {
-        AuditLogDto firstLog = logDtoList.get(0);
-        List<MetadataDto> metadata = new ArrayList<>();
-        List<ActionDto> actions = new ArrayList<>();
-        for (AuditLogDto logDto : logDtoList) {
-            if (logDto.getMetadata() != null) {
-                metadata.addAll(logDto.getMetadata());
-            }
-            if (logDto.getAction() != null) {
-                actions.addAll(logDto.getAction());
-            }
+    private void sendAuditLog(AuditLogDto logDto) {
+        try {
+            kafkaTemplate.send(AUDIT_TOPIC, logDto.getPerformer().getPerformerId(), logDto)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            System.err.println("Failed to send audit log to Kafka topic '" + AUDIT_TOPIC + "': " + ex.getMessage());
+                            throw new RuntimeException("Failed to send audit log to Kafka: " + ex.getMessage(), ex);
+                        } else {
+                            System.out.println("Successfully sent audit log to Kafka topic '" + AUDIT_TOPIC + "': " + logDto.getPerformer().getPerformerId());
+                        }
+                    });
+        } catch (Exception e) {
+            System.err.println("Error initiating Kafka send: " + e.getMessage());
+            throw new RuntimeException("Error initiating Kafka send: " + e.getMessage(), e);
         }
-
-        AuditLogDto auditLogDto = AuditLogDto.builder()
-                .ipAddress(firstLog.getIpAddress())
-                .serviceName(firstLog.getServiceName())
-                .tokenId(firstLog.getTokenId())
-                .timeToArchiveInDays(auditLogUtil.getTimeToArchive(firstLog.getArchiveStrategy(), firstLog.getLogLevel()))
-                .performer(firstLog.getPerformer())
-                .logLevel(firstLog.getLogLevel())
-                .archiveStrategy(firstLog.getArchiveStrategy())
-                .action(actions)
-                .metadata(metadata)
-                .build();
-
-        kafkaTemplate.send(AUDIT_TOPIC, auditLogDto.getPerformer().getPerformerId(), auditLogDto)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        throw new RuntimeException("Failed to send audit log to Kafka: " + ex.getMessage(), ex);
-                    }
-                });
     }
 }

@@ -38,7 +38,12 @@ public class LoggerTarget {
         List<ILogObserver> observers = logObservers.get(level);
         if (observers != null) {
             for (ILogObserver observer : observers) {
-                observer.log(message);
+                if (observer != null) {
+                    observer.log(message);
+                } else {
+                    // Optionally log a warning for debugging
+                    System.err.println("Null observer found for level: " + level);
+                }
             }
         }
     }
