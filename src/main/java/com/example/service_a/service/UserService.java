@@ -3,7 +3,7 @@ package com.example.service_a.service;
 import com.example.service_a.model.UserModel;
 import com.example.service_a.repository.UserRepository;
 import com.example.service_a.util.UserIdGenerator;
-import com.example.service_a.component.Logger;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final Logger logger;
 
+    @Transactional
     public UserModel createUser(UserModel userModel) {
         if (userRepository.existsByWorkEmail(userModel.getWorkEmail())) {
             throw new RuntimeException("Email already exists");
@@ -31,11 +31,13 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
+    @Transactional
     public UserModel getUser(String performerId) {
         return userRepository.findByPerformerId(performerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    @Transactional
     public List<UserModel> getAllUsers() {
         return userRepository.findAll();
     }
@@ -54,6 +56,7 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
+    @Transactional
     public void deleteUser(String performerId) {
         if (!userRepository.existsByPerformerId(performerId)) {
             throw new RuntimeException("User not found");

@@ -58,20 +58,20 @@ public class AuditLogUtil {
      * Determines the time to archive based on the archive strategy and log level.
      * @param archiveStrategy the strategy for archiving logs
      * @param logLevel the log level of the message
-     * @return the number of days as a string before archiving, or "9999" for never
+     * @return the number of minutes as a string before archiving, or "9999" for never
      */
     public String getTimeToArchive(String archiveStrategy, String logLevel) {
         if ("DELETE".equals(archiveStrategy)) {
             return "0";
         } else if ("ARCHIVE".equals(archiveStrategy)) {
             return switch (logLevel) {
-                case "ERROR" -> "30";
-                case "WARNING" -> "15";
-                case "INFO", "DEBUG" -> "7";
-                default -> "7";
+                case "ERROR" -> ServiceConstant.ARCHIVE_TIME_ERROR;
+                case "WARNING" -> ServiceConstant.ARCHIVE_TIME_WARNING;
+                case "INFO", "DEBUG" -> ServiceConstant.ARCHIVE_TIME_DEFAULT;
+                default -> ServiceConstant.ARCHIVE_TIME_DEFAULT;
             };
         } else {
-            return "9999"; // NEVER
+            return "9999";
         }
     }
 

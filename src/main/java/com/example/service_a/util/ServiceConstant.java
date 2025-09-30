@@ -42,4 +42,19 @@ public class ServiceConstant {
             "MESSAGE",
             "ERROR MESSAGE"
     );
+
+    /**
+     * Archive time in minutes for ERROR log level.
+     */
+    public static final String ARCHIVE_TIME_ERROR = "3";
+
+    /**
+     * Archive time in minutes for WARNING log level.
+     */
+    public static final String ARCHIVE_TIME_WARNING = "2";
+
+    /**
+     * Default archive time in minutes for INFO and DEBUG log levels.
+     */
+    public static final String ARCHIVE_TIME_DEFAULT = "1";
 }
