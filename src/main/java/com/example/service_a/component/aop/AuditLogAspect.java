@@ -50,7 +50,7 @@ public class AuditLogAspect {
      * @param result the result returned by the method
      * @throws Exception if an error occurs during logging
      */
-    @AfterReturning(pointcut = "execution(* com.example.service_a.service.UserService.*(..))", returning = "result")
+    @AfterReturning(pointcut = "execution(* com.example.service_a.service..*.*(..))", returning = "result")
     public void logMethodExecution(JoinPoint joinPoint, Object result) throws Exception {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
@@ -115,7 +115,7 @@ public class AuditLogAspect {
      * @param ex the exception thrown by the method
      * @throws Exception if an error occurs during logging
      */
-    @AfterThrowing(pointcut = "execution(* com.example.service_a.service.UserService.*(..))", throwing = "ex")
+    @AfterReturning(pointcut = "execution(* com.example.service_a.service..*.*(..))", returning = "result")
     public void logException(JoinPoint joinPoint, Throwable ex) throws Exception {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
