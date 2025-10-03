@@ -49,9 +49,9 @@ public class AuditLogDto implements Serializable {
     @Size(max = 50, message = "Archive strategy must not exceed 50 characters")
     private String archiveStrategy;
 
-    @JsonProperty("performer")
-    @NotBlank(message = "Performer is required")
-    private UserFlatDto performer;
+    @JsonProperty("performer_id")
+    @NotBlank(message = "Performer id is required")
+    private String performerId;
 
     @JsonProperty("metadata")
     private List<MetadataDto> metadata;

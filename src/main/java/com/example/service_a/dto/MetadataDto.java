@@ -1,29 +1,32 @@
 package com.example.service_a.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
 public class MetadataDto {
 
     @JsonProperty("id")
     private String id;
 
+    @JsonProperty("audit_log_id")
+    private String auditLogId;
+
     @JsonProperty("content")
-    @Size(max = 255, message = "Content must not exceed 255 characters")
+    @NotBlank(message = "Content is required")
+    @Size(message = "Content must not exceed 255 characters")
     private String content;
 
     @JsonProperty("metadata_type")
+    @NotBlank(message = "Metadata type is required")
+    @Size(max = 50, message = "Metadata type must not exceed 50 characters")
     private String metadataType;
 
-    @JsonProperty("audit_log_id")
-    @Size(max = 50, message = "Audit log ID must not exceed 50 characters")
-    private String auditLogId;
+    @JsonProperty("is_user_creation")
+    private boolean isUserCreation;
 }

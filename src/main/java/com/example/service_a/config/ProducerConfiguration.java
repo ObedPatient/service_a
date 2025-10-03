@@ -8,6 +8,7 @@
 package com.example.service_a.config;
 
 import com.example.service_a.dto.AuditLogDto;
+import com.example.service_a.dto.UserFlatDto;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -47,5 +48,31 @@ public class ProducerConfiguration {
     @Bean
     public KafkaTemplate<String, AuditLogDto> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
+    }
+
+    /**
+     * Creates a Kafka ProducerFactory for producing UserFlatDto messages.
+     *
+     * @return a configured ProducerFactory
+     */
+    @Bean
+    public ProducerFactory<String, UserFlatDto> userSignupProducerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, "true");
+        configProps.put(JsonSerializer.TYPE_MAPPINGS, "userFlat:com.example.service_a.dto.UserFlatDto");
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    /**
+     * Creates a KafkaTemplate for sending UserFlatDto messages to Kafka.
+     *
+     * @return a configured KafkaTemplate
+     */
+    @Bean
+    public KafkaTemplate<String, UserFlatDto> userSignupKafkaTemplate() {
+        return new KafkaTemplate<>(userSignupProducerFactory());
     }
 }

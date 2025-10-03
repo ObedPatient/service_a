@@ -2,10 +2,10 @@
  * Logs audit information to a Kafka topic.
  *
  * @author Obed Patient
- * @version 1.0
+ * @version 1.3
  * @since 1.0
  */
-package com.example.service_a.producer;
+        package com.example.service_a.producer;
 
 import com.example.service_a.dto.*;
 import com.example.service_a.component.AuditLogUtil;
@@ -22,16 +22,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KafkaLogger implements ILogObserver {
     private final KafkaTemplate<String, AuditLogDto> kafkaTemplate;
+    private final KafkaTemplate<String, UserFlatDto> userSignupKafkaTemplate;
     private final ObjectMapper objectMapper;
     private final AuditLogUtil auditLogUtil;
     private static final String AUDIT_TOPIC = "audit-log-topic";
+    private static final String USER_SIGNUP_TOPIC = "user-signup-topic";
 
-    /**
-     * Logs audit information by validating and sending it to Kafka.
-     *
-     * @param message the audit log message in JSON format
-     * @throws Exception if validation fails or an error occurs during processing
-     */
     @Override
     public void log(String message) throws Exception {
         // Deserialize JSON message to AuditLogDto
@@ -63,29 +59,82 @@ public class KafkaLogger implements ILogObserver {
             throw new IllegalArgumentException("Validation failed: " + errors);
         }
 
-        // Send log directly to Kafka
+        // Check if this is a user creation event and extract user details
+        boolean isUserCreation = false;
+        UserFlatDto userDto = null;
+        if (logDto.getMetadata() != null) {
+            for (MetadataDto metadata : logDto.getMetadata()) {
+                if (metadata.isUserCreation()) {
+                    isUserCreation = true;
+                    userDto = extractUserDetailsFromMetadata(metadata);
+                    break;
+                }
+            }
+        }
+
+        // Send user signup if it's a user creation event
+        if (isUserCreation && userDto != null) {
+            sendUserSignup(userDto);
+        }
+
+        // Send the full audit log DTO
         sendAuditLog(logDto);
     }
 
-    /**
-     * Sends a single audit log to the Kafka topic.
-     *
-     * @param logDto the audit log to send
-     */
+    private UserFlatDto extractUserDetailsFromMetadata(MetadataDto metadata) {
+        try {
+            if (metadata.getContent() != null) {
+                UserFlatDto userDto = objectMapper.readValue(metadata.getContent(), UserFlatDto.class);
+                // Validate user fields
+                if (userDto.getPerformerId() == null || userDto.getPerformerId().isEmpty()) {
+                    throw new IllegalArgumentException("Performer ID is required in UserFlatDto");
+                }
+                return userDto;
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to extract user details from metadata: " + e.getMessage());
+        }
+        // Fallback to default values if extraction fails
+        return UserFlatDto.builder()
+                .performerId("unknown")
+                .firstName("Unknown")
+                .lastName("Unknown")
+                .workEmail("unknown@gmail.com")
+                .phoneNumber("unknown")
+                .build();
+    }
+
     private void sendAuditLog(AuditLogDto logDto) {
         try {
-            kafkaTemplate.send(AUDIT_TOPIC, logDto.getPerformer().getPerformerId(), logDto)
+            kafkaTemplate.send(AUDIT_TOPIC, logDto.getPerformerId(), logDto)
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
                             System.err.println("Failed to send audit log to Kafka topic '" + AUDIT_TOPIC + "': " + ex.getMessage());
                             throw new RuntimeException("Failed to send audit log to Kafka: " + ex.getMessage(), ex);
                         } else {
-                            System.out.println("Successfully sent audit log to Kafka topic '" + AUDIT_TOPIC + "': " + logDto.getPerformer().getPerformerId());
+                            System.out.println("Successfully sent audit log to Kafka topic '" + AUDIT_TOPIC + "': " + logDto.getPerformerId());
                         }
                     });
         } catch (Exception e) {
             System.err.println("Error initiating Kafka send: " + e.getMessage());
             throw new RuntimeException("Error initiating Kafka send: " + e.getMessage(), e);
+        }
+    }
+
+    private void sendUserSignup(UserFlatDto userDto) {
+        try {
+            userSignupKafkaTemplate.send(USER_SIGNUP_TOPIC, userDto.getPerformerId(), userDto)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            System.err.println("Failed to send user signup to Kafka topic '" + USER_SIGNUP_TOPIC + "': " + ex.getMessage());
+                            throw new RuntimeException("Failed to send user signup to Kafka: " + ex.getMessage(), ex);
+                        } else {
+                            System.out.println("Successfully sent user signup to Kafka topic '" + USER_SIGNUP_TOPIC + "': " + userDto.getPerformerId());
+                        }
+                    });
+        } catch (Exception e) {
+            System.err.println("Error initiating Kafka send for user signup: " + e.getMessage());
+            throw new RuntimeException("Error initiating Kafka send for user signup: " + e.getMessage(), e);
         }
     }
 }

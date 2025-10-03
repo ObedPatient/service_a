@@ -29,4 +29,18 @@ public class TopicConfig {
                 .replicas(1)
                 .build();
     }
+
+    /**
+     * Creates a Kafka topic for user signup events.
+     *
+     * @return a new Kafka topic named "user-signup-topic"
+     */
+    @Bean
+    public NewTopic userSignupTopic() {
+        return TopicBuilder
+                .name("user-signup-topic")
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
 }
