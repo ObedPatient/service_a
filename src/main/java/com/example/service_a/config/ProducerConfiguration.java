@@ -35,8 +35,6 @@ public class ProducerConfiguration {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, "true");
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, "auditLog:com.example.service_a.dto.AuditLogDto");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -61,8 +59,6 @@ public class ProducerConfiguration {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, "true");
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, "userFlat:com.example.service_a.dto.UserFlatDto");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
