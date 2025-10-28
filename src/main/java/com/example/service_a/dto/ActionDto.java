@@ -26,7 +26,5 @@ public class ActionDto {
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
-    @JsonProperty("audit_log_id")
-    @Size(max = 50, message = "Audit log ID must not exceed 50 characters")
-    private String auditLogId;
+
 }

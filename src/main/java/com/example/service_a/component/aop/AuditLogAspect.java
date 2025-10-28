@@ -4,7 +4,7 @@
  * @version 1.3
  * @since 1.0
  */
-        package com.example.service_a.component.aop;
+package com.example.service_a.component.aop;
 
 import com.example.service_a.dto.AuditLogDto;
 import com.example.service_a.dto.ActionDto;
@@ -13,6 +13,7 @@ import com.example.service_a.dto.UserFlatDto;
 import com.example.service_a.component.AuditLogUtil;
 import com.example.service_a.component.Logger;
 import com.example.service_a.model.UserModel;
+import com.example.service_a.util.ServiceConstant;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -25,9 +26,9 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 
 @Aspect
 @Component
@@ -40,7 +41,7 @@ public class AuditLogAspect {
     private final AuditLogUtil auditLogUtil;
 
     @Value("${app.service-name}")
-    private String serviceName;
+    public String serviceName;
 
     /**
      * Logs audit information after a UserService method executes successfully.
@@ -90,24 +91,23 @@ public class AuditLogAspect {
         AuditLogDto auditLogDto = AuditLogDto.builder()
                 .ipAddress(ipAddress)
                 .serviceName(serviceName)
+                .serverUser(ServiceConstant.SERVER_USER)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
                 .timeToArchiveInDays(timeToArchive)
                 .performerId(performerId)
-                .metadata(List.of(
-                        MetadataDto.builder()
+                .metadata(MetadataDto.builder()
                                 .content(content)
                                 .metadataType(metadataType)
                                 .isUserCreation(isUserCreation)
                                 .build()
-                ))
-                .action(List.of(
-                        ActionDto.builder()
+                )
+                .action(ActionDto.builder()
                                 .name(methodName)
                                 .description(description)
                                 .build()
-                ))
+                )
                 .build();
 
         // Log audit information
@@ -138,24 +138,23 @@ public class AuditLogAspect {
         AuditLogDto auditLogDto = AuditLogDto.builder()
                 .ipAddress(ipAddress)
                 .serviceName(serviceName)
+                .serverUser(ServiceConstant.SERVER_USER)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
                 .timeToArchiveInDays(timeToArchive)
                 .performerId("unknown")
-                .metadata(List.of(
-                        MetadataDto.builder()
+                .metadata(MetadataDto.builder()
                                 .content(content)
                                 .metadataType(metadataType)
                                 .isUserCreation(false)
                                 .build()
-                ))
-                .action(List.of(
-                        ActionDto.builder()
+                )
+                .action(ActionDto.builder()
                                 .name(methodName)
                                 .description(description)
                                 .build()
-                ))
+                )
                 .build();
 
         String message = objectMapper.writeValueAsString(auditLogDto);

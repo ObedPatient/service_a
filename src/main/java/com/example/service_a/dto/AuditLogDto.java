@@ -29,6 +29,11 @@ public class AuditLogDto implements Serializable {
     @Size(max = 255, message = "Service name must not exceed 255 characters")
     private String serviceName;
 
+    @JsonProperty("server_user")
+    @NotBlank(message = "server user name is required")
+    @Size(max = 255, message = "server user name must not exceed 255 characters")
+    private String serverUser;
+
     @JsonProperty("token_id")
     @NotBlank(message = "TokenId is required")
     @Size(max = 255, message = "Token ID must not exceed 255 characters")
@@ -54,8 +59,8 @@ public class AuditLogDto implements Serializable {
     private String performerId;
 
     @JsonProperty("metadata")
-    private List<MetadataDto> metadata;
+    private MetadataDto metadata;
 
     @JsonProperty("action")
-    private List<ActionDto> action;
+    private ActionDto action;
 }

@@ -14,9 +14,6 @@ public class MetadataDto {
     @JsonProperty("id")
     private String id;
 
-    @JsonProperty("audit_log_id")
-    private String auditLogId;
-
     @JsonProperty("content")
     @NotBlank(message = "Content is required")
     @Size(message = "Content must not exceed 255 characters")

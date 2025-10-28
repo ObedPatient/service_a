@@ -8,10 +8,14 @@
  */
 package com.example.service_a.util;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.Arrays;
 import java.util.List;
 
 public class ServiceConstant {
+
+    public static final String SERVER_USER = System.getProperty("user.name");
 
     /**
      * List of valid log levels that can be used for logging.

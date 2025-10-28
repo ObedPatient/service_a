@@ -53,8 +53,6 @@ public class LogManager {
             loggerTarget.addObserver("ERROR", kafkaLogger);
             loggerTarget.addObserver("WARNING", kafkaLogger);
             loggerTarget.addObserver("DEBUG", kafkaLogger);
-        } else {
-            System.err.println("KafkaLogger is null, no observers added");
         }
         return loggerTarget;
     }

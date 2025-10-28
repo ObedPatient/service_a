@@ -35,7 +35,6 @@ public class KafkaLogger implements ILogObserver {
         try {
             logDto = objectMapper.readValue(message, AuditLogDto.class);
         } catch (Exception e) {
-            System.err.println("Failed to deserialize audit log message: " + e.getMessage());
             throw new IllegalArgumentException("Invalid JSON format: " + e.getMessage(), e);
         }
 
@@ -48,10 +47,8 @@ public class KafkaLogger implements ILogObserver {
             errors.put("archiveStrategy", "Invalid archive strategy: " + logDto.getArchiveStrategy());
         }
         if (logDto.getMetadata() != null) {
-            for (MetadataDto metadata : logDto.getMetadata()) {
-                if (!auditLogUtil.getValidMetadataTypes().contains(metadata.getMetadataType())) {
-                    errors.put("metadataType", "Invalid metadata type: " + metadata.getMetadataType());
-                }
+            if (!auditLogUtil.getValidMetadataTypes().contains(logDto.getMetadata().getMetadataType())){
+                errors.put("metadatatypes", "Invalid metadata type:" + logDto.getMetadata().getMetadataType());
             }
         }
         if (!errors.isEmpty()) {
@@ -62,14 +59,9 @@ public class KafkaLogger implements ILogObserver {
         // Check if this is a user creation event and extract user details
         boolean isUserCreation = false;
         UserFlatDto userDto = null;
-        if (logDto.getMetadata() != null) {
-            for (MetadataDto metadata : logDto.getMetadata()) {
-                if (metadata.isUserCreation()) {
-                    isUserCreation = true;
-                    userDto = extractUserDetailsFromMetadata(metadata);
-                    break;
-                }
-            }
+        if (logDto.getMetadata() != null && logDto.getMetadata().isUserCreation()) {
+            isUserCreation = true;
+            userDto = extractUserDetailsFromMetadata(logDto.getMetadata());
         }
 
         // Send user signup if it's a user creation event
@@ -133,7 +125,6 @@ public class KafkaLogger implements ILogObserver {
                         }
                     });
         } catch (Exception e) {
-            System.err.println("Error initiating Kafka send for user signup: " + e.getMessage());
             throw new RuntimeException("Error initiating Kafka send for user signup: " + e.getMessage(), e);
         }
     }
