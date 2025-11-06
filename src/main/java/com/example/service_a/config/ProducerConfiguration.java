@@ -1,14 +1,9 @@
-
 /**
- * Configuration class for setting up Kafka producer beans.
- * @author Obed Patient
- * @version 1.0
- * @since 1.0
+ * Configuration class for Kafka producers.
+ * Sends both AuditLogDto and UserFlatDto as JSON strings.
  */
 package com.example.service_a.config;
 
-import com.example.service_a.dto.AuditLogDto;
-import com.example.service_a.dto.UserFlatDto;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,51 +18,25 @@ import java.util.Map;
 @Configuration
 public class ProducerConfiguration {
 
+    private static final String BOOTSTRAP_SERVERS = "localhost:9092";
+
     /**
-     * Creates a Kafka ProducerFactory for producing AuditLogDto messages.
-     *
-     * @return a configured ProducerFactory
+     * Shared ProducerFactory: String key, String value (JSON payload)
      */
     @Bean
-    public ProducerFactory<String, AuditLogDto> producerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(configProps);
+    public ProducerFactory<String, String> ProducerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(props);
     }
 
     /**
-     * Creates a KafkaTemplate for sending AuditLogDto messages to Kafka.
-     *
-     * @return a configured KafkaTemplate
+     * Single KafkaTemplate used for ALL string messages
      */
     @Bean
-    public KafkaTemplate<String, AuditLogDto> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    /**
-     * Creates a Kafka ProducerFactory for producing UserFlatDto messages.
-     *
-     * @return a configured ProducerFactory
-     */
-    @Bean
-    public ProducerFactory<String, UserFlatDto> userSignupProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
-    /**
-     * Creates a KafkaTemplate for sending UserFlatDto messages to Kafka.
-     *
-     * @return a configured KafkaTemplate
-     */
-    @Bean
-    public KafkaTemplate<String, UserFlatDto> userSignupKafkaTemplate() {
-        return new KafkaTemplate<>(userSignupProducerFactory());
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return new KafkaTemplate<>(ProducerFactory());
     }
 }

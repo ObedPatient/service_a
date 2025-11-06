@@ -50,15 +50,13 @@ public class ServiceConstant {
     /**
      * Archive time in minutes for ERROR log level.
      */
-    public static final String ARCHIVE_TIME_ERROR = "3";
-
+    public static final int ARCHIVE_TIME_ERROR = 3;      // days
     /**
      * Archive time in minutes for WARNING log level.
      */
-    public static final String ARCHIVE_TIME_WARNING = "2";
-
+    public static final int ARCHIVE_TIME_WARNING = 2;    // days
     /**
      * Default archive time in minutes for INFO and DEBUG log levels.
      */
-    public static final String ARCHIVE_TIME_DEFAULT = "1";
+    public static final int ARCHIVE_TIME_DEFAULT = 1;
 }

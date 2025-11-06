@@ -55,10 +55,11 @@ public class AuditLogAspect {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String ipAddress = getClientIp();
+        String serverIp = getServerIp();
         String tokenId = "unknown";
         String logLevel = auditLogUtil.determineLogLevel(methodName);
         String archiveStrategy = auditLogUtil.determineArchiveStrategy(methodName);
-        String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
+        Integer timeToArchiveInDays = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
         String description = (result instanceof UserModel ? "User operation" : "Operation") + " in " + methodName + " in " + className;
         String metadataType = auditLogUtil.determineMetadataType(result, methodName);
         String content = generateContent(result, metadataType);
@@ -70,7 +71,7 @@ public class AuditLogAspect {
         String performerId = "unknown";
         if (result instanceof UserModel userModel) {
             performer = UserFlatDto.builder()
-                    .performerId(userModel.getPerformerId())
+                    .id(userModel.getPerformerId())
                     .firstName(userModel.getFirstName())
                     .lastName(userModel.getLastName())
                     .workEmail(userModel.getWorkEmail())
@@ -80,7 +81,7 @@ public class AuditLogAspect {
             content = objectMapper.writeValueAsString(performer);
         } else {
             performer = UserFlatDto.builder()
-                    .performerId("unknown")
+                    .id("unknown")
                     .firstName("Unknown")
                     .lastName("Unknown")
                     .workEmail("unknown@gmail.com")
@@ -89,13 +90,15 @@ public class AuditLogAspect {
         }
 
         AuditLogDto auditLogDto = AuditLogDto.builder()
-                .ipAddress(ipAddress)
+                .requestIpAddress(ipAddress)
                 .serviceName(serviceName)
+                .serverIpAddress(serverIp)
+                .port(request.getLocalPort())
                 .serverUser(ServiceConstant.SERVER_USER)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
-                .timeToArchiveInDays(timeToArchive)
+                .timeToArchiveInDays(timeToArchiveInDays)
                 .performerId(performerId)
                 .metadata(MetadataDto.builder()
                                 .content(content)
@@ -127,22 +130,25 @@ public class AuditLogAspect {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String ipAddress = getClientIp();
+        String serverIp = getServerIp();
         String tokenId = "unknown";
         String logLevel = "ERROR";
         String archiveStrategy = "ARCHIVE";
-        String timeToArchive = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
+        Integer timeToArchiveInDays = auditLogUtil.getTimeToArchive(archiveStrategy, logLevel);
         String description = "Exception in " + methodName + " in " + className;
         String metadataType = auditLogUtil.determineMetadataType(ex, methodName);
         String content = generateContent(ex, metadataType);
 
         AuditLogDto auditLogDto = AuditLogDto.builder()
-                .ipAddress(ipAddress)
+                .requestIpAddress(ipAddress)
                 .serviceName(serviceName)
+                .serverIpAddress(serverIp)
+                .port(request.getLocalPort())
                 .serverUser(ServiceConstant.SERVER_USER)
                 .tokenId(tokenId)
                 .logLevel(logLevel)
                 .archiveStrategy(archiveStrategy)
-                .timeToArchiveInDays(timeToArchive)
+                .timeToArchiveInDays(timeToArchiveInDays)
                 .performerId("unknown")
                 .metadata(MetadataDto.builder()
                                 .content(content)
@@ -170,6 +176,18 @@ public class AuditLogAspect {
             ip = InetAddress.getLocalHost().getHostAddress();
         }
         return ip;
+    }
+
+    /**
+     * Get actual server IP (handles multiple NICs, Docker, cloud)
+     */
+    private String getServerIp() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            System.out.println("WARN" + "Could not resolve server IP: " + e.getMessage());
+            return "127.0.0.1";
+        }
     }
 
     private String generateContent(Object result, String metadataType) throws Exception {

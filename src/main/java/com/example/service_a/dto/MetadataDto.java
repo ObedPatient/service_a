@@ -1,15 +1,16 @@
 package com.example.service_a.dto;
 
+import com.example.service_a.dto.base.BaseGeneralTimestampDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Data
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MetadataDto {
+public class MetadataDto extends BaseGeneralTimestampDto {
 
     @JsonProperty("id")
     private String id;

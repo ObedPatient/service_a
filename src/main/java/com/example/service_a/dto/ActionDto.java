@@ -1,18 +1,19 @@
 package com.example.service_a.dto;
 
+import com.example.service_a.dto.base.BaseGeneralTimestampDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode(callSuper = false)
 @Data
-@Builder
-public class ActionDto {
+@ToString(callSuper = true)
+public class ActionDto extends BaseGeneralTimestampDto {
 
     @JsonProperty("id")
     private String id;
@@ -25,6 +26,4 @@ public class ActionDto {
     @JsonProperty("description")
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
-
-
 }
