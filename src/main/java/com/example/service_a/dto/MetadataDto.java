@@ -5,11 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
+@Data
 public class MetadataDto extends BaseGeneralTimestampDto {
 
     @JsonProperty("id")

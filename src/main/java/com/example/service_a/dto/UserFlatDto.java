@@ -16,7 +16,6 @@ import lombok.experimental.SuperBuilder;
 public class UserFlatDto extends BaseGeneralTimestampDto {
 
     @JsonProperty("performer_id")
-    @NotBlank(message = "Performer ID is required")
     @Size(max = 50, message = "Performer ID must not exceed 50 characters")
     private String id;
 

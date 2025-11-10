@@ -55,7 +55,7 @@ public class UserController {
 
     private UserModel toModel(UserFlatDto userDto) {
         return UserModel.builder()
-                .performerId(userDto.getPerformerId())
+                .performerId(userDto.getId())
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .workEmail(userDto.getWorkEmail())
@@ -65,7 +65,7 @@ public class UserController {
 
     private UserFlatDto toDto(UserModel userModel) {
         return UserFlatDto.builder()
-                .performerId(userModel.getPerformerId())
+                .id(userModel.getPerformerId())
                 .firstName(userModel.getFirstName())
                 .lastName(userModel.getLastName())
                 .workEmail(userModel.getWorkEmail())
